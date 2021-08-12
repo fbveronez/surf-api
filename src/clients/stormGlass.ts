@@ -1,5 +1,6 @@
-import {AxiosStatic} from 'axios';
-import {InternalError} from '@src/util/errors/internal-error';
+import { AxiosStatic } from 'axios';
+import { InternalError } from '@src/util/errors/internal-error';
+import config, { IConfig } from 'config';
 
 export interface StormGlassPointSource {
   [key: string]: number;
@@ -33,21 +34,24 @@ export interface ForecastPoint {
 
 export class ClientRequestError extends InternalError {
   constructor(message: string) {
-    const internalMessage = 'Unexpected error when trying to comunicate to StormGlass';
+    const internalMessage =
+      'Unexpected error when trying to comunicate to StormGlass';
     super(`${internalMessage}: ${message}`);
   }
 }
 
 export class StormGlassResponseError extends InternalError {
   constructor(message: string) {
-    const internalMessage = 'Unexpected error return by the StormGlass service'
+    const internalMessage = 'Unexpected error return by the StormGlass service';
     super(`${internalMessage}: ${message}`);
   }
 }
 
-export class StormGlass {
+const stormGlassResourceConfig: IConfig = config.get('App.resource.Stormglass');
 
-  readonly stormGlassAPIParams = 'swellDirection, swellHeight,swellPeriod,waveDirection,waveHeight,windDirection,windSpeed';
+export class StormGlass {
+  readonly stormGlassAPIParams =
+    'swellDirection, swellHeight,swellPeriod,waveDirection,waveHeight,windDirection,windSpeed';
   readonly stormGlassAPISource = 'noaa';
 
   constructor(protected request: AxiosStatic) {}
@@ -59,19 +63,25 @@ export class StormGlass {
         {
           headers: {
             Authorization: 'fake-token',
-          }
+          },
         }
       );
-      return this.normalizeResponse(response.data)
+      return this.normalizeResponse(response.data);
     } catch (err) {
       if (err.response && err.response.data) {
-        throw new StormGlassResponseError(`Error: ${JSON.stringify(err.response.data)} Code: ${err.response.status}`)
+        throw new StormGlassResponseError(
+          `Error: ${JSON.stringify(err.response.data)} Code: ${
+            err.response.status
+          }`
+        );
       }
       throw new ClientRequestError(err.message);
     }
   }
 
-  private normalizeResponse(points: StormGlassForecastResponse): ForecastPoint[] {
+  private normalizeResponse(
+    points: StormGlassForecastResponse
+  ): ForecastPoint[] {
     return points.hours.filter(this.isValidPoint.bind(this)).map((point) => ({
       swellDirection: point.swellDirection[this.stormGlassAPISource],
       time: point.time,
@@ -82,7 +92,6 @@ export class StormGlass {
       windDirection: point.windDirection[this.stormGlassAPISource],
       windSpeed: point.windSpeed[this.stormGlassAPISource],
     }));
-
   }
 
   private isValidPoint(point: Partial<StormGlassPoint>): boolean {
