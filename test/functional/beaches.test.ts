@@ -10,7 +10,6 @@ describe('Beaches Functional test', () => {
   };
 
   let token: string;
-  beforeAll(async () => await Beach.deleteMany({}));
   beforeEach(async () => {
     await Beach.deleteMany({});
     await User.deleteMany({});
