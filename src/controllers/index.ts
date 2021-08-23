@@ -2,6 +2,7 @@ import { Response } from 'express';
 import mongoose from 'mongoose';
 import { CUSTOM_VALIDATION } from '@src/models/user';
 import logger from '@src/logger';
+import ApiError, { APIError } from '@src/util/errors/api-error';
 
 export abstract class BaseController {
   protected sendCreateUpdatedErrorResponse(
@@ -20,13 +21,23 @@ export abstract class BaseController {
         }
       });
       if (duplicatedKindErrors.length) {
-        res.status(409).send({ code: 409, error: error.message });
+        res
+          .status(409)
+          .send(ApiError.format({ code: 409, message: error.message }));
       } else {
-        res.status(422).send({ code: 422, error: error.message });
+        res
+          .status(422)
+          .send(ApiError.format({ code: 422, message: error.message }));
       }
     } else {
       logger.error(error);
-      res.status(500).send({ code: 500, error: 'Something went wrong' });
+      res
+        .status(500)
+        .send(ApiError.format({ code: 500, message: 'Something went wrong' }));
     }
+  }
+
+  protected sendErrorResponse(res: Response, apiError: APIError): Response {
+    return res.status(apiError.code).send(ApiError.format(apiError));
   }
 }
