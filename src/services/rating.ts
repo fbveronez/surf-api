@@ -1,4 +1,5 @@
 import { Beach, GeoPosition } from '@src/models/beach';
+import { ForecastPoint } from '@src/clients/stormGlass';
 
 const waveHeights = {
   ankleToKnee: {
@@ -18,13 +19,29 @@ const waveHeights = {
 export class Rating {
   constructor(private beach: Beach) {}
 
+  public getRateForPoint(point: ForecastPoint): number {
+    const swellDirection = this.getPositionFromLocation(point.swellDirection);
+    const windDirection = this.getPositionFromLocation(point.windDirection);
+    const windAndWaveRating = this.getRatingBasedOnWindAndWavePosition(
+      swellDirection,
+      windDirection
+    );
+    const swellHeightRating = this.getRatingForSwellSize(point.swellHeight);
+    const swellPeriodRating = this.getRatingForSwellPeriod(point.swellPeriod);
+
+    const finalRating =
+      (windAndWaveRating + swellHeightRating + swellPeriodRating) / 3;
+
+    return Math.round(finalRating);
+  }
+
   public getRatingBasedOnWindAndWavePosition(
-    wavePosition: GeoPosition,
-    windPosition: GeoPosition
+    waveDirection: GeoPosition,
+    windDirection: GeoPosition
   ): number {
-    if (wavePosition === windPosition) {
+    if (waveDirection === windDirection) {
       return 1;
-    } else if (this.isWindOffShore(wavePosition, windPosition)) {
+    } else if (this.isWindOffShore(waveDirection, windDirection)) {
       return 5;
     }
     return 3;
@@ -82,19 +99,22 @@ export class Rating {
     return GeoPosition.E;
   }
 
-  private isWindOffShore(wavePosition: string, windPosition: string): boolean {
+  private isWindOffShore(
+    waveDirection: string,
+    windDirection: string
+  ): boolean {
     return (
-      (wavePosition === GeoPosition.N &&
-        windPosition === GeoPosition.S &&
+      (waveDirection === GeoPosition.N &&
+        windDirection === GeoPosition.S &&
         this.beach.position === GeoPosition.N) ||
-      (wavePosition === GeoPosition.S &&
-        windPosition === GeoPosition.N &&
+      (waveDirection === GeoPosition.S &&
+        windDirection === GeoPosition.N &&
         this.beach.position === GeoPosition.S) ||
-      (wavePosition === GeoPosition.E &&
-        windPosition === GeoPosition.W &&
+      (waveDirection === GeoPosition.E &&
+        windDirection === GeoPosition.W &&
         this.beach.position === GeoPosition.E) ||
-      (wavePosition === GeoPosition.W &&
-        windPosition === GeoPosition.E &&
+      (waveDirection === GeoPosition.W &&
+        windDirection === GeoPosition.E &&
         this.beach.position === GeoPosition.W)
     );
   }
