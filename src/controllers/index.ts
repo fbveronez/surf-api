@@ -26,8 +26,8 @@ export abstract class BaseController {
           .send(ApiError.format({ code: 409, message: error.message }));
       } else {
         res
-          .status(422)
-          .send(ApiError.format({ code: 422, message: error.message }));
+          .status(400)
+          .send(ApiError.format({ code: 400, message: error.message }));
       }
     } else {
       logger.error(error);
