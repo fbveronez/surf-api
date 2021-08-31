@@ -4,7 +4,7 @@ export interface APIError {
   message: string;
   code: number;
   codeAsString?: string;
-  descriptiion?: string;
+  description?: string;
   documentation?: string;
 }
 
@@ -23,7 +23,7 @@ export default class ApiError {
           : httpStatusCodes.getStatusText(error.code),
       },
       ...(error.documentation && { documentation: error.documentation }),
-      ...(error.descriptiion && { descriptiion: error.descriptiion }),
+      ...(error.description && { description: error.description }),
     };
   }
 }
